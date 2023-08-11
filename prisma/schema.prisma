@@ -51,6 +51,8 @@ model Account {
   plan_name               String
   members                 Membership[]
   notes                   Note[]
+  recipes                 AccountRecipeRelationship[]
+  max_recipes             Int         @default(100)
   max_notes               Int         @default(100)
   stripe_subscription_id  String?
   stripe_customer_id      String?
@@ -58,6 +60,16 @@ model Account {
   join_password           String     @unique
 
   @@map("account")
+}
+
+model AccountRecipeRelationship {
+  account_id              Int
+  account                 Account @relation(fields: [account_id], references: [id])
+  recipe_id               Int
+  recipe                  Recipe           @relation(fields: [recipe_id], references: [id])
+
+  @@map("_account_recipe_relationship")
+  @@id([account_id, recipe_id])
 }
 
 model Plan {
@@ -105,6 +117,7 @@ model Recipe {
   ingredients             RecipeIngredientRecipeRelationship[]
   tags                    TagRecipeRelationship[]
   meal                    Meal[]
+  account                 AccountRecipeRelationship[]
 
   @@map("recipe")
 }
@@ -115,6 +128,7 @@ model RecipeIngredientRecipeRelationship {
   recipe_id               Int
   recipe                  Recipe           @relation(fields: [recipe_id], references: [id])
 
+  @@map("_recipe_ingredient_recipe_relationship")
   @@id([recipeingredient_id, recipe_id])
 }
 
@@ -150,6 +164,7 @@ model IngredientRecipeIngredientRelationship {
   recipeingredient_id   Int
   recipeingredient      RecipeIngredient @relation(fields: [recipeingredient_id], references: [id]) 
 
+  @@map("_ingredient_recipe_ingredient_relationship")
   @@id([ingredient_id, recipeingredient_id])
 }
 
@@ -185,5 +200,6 @@ model TagRecipeRelationship {
   recipe_id               Int
   recipe                  Recipe     @relation(fields: [recipe_id], references: [id])
 
+  @@map("_tag_recipe_relationship")
   @@id([tag_id, recipe_id])
 }
