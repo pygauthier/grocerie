@@ -1,0 +1,189 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                    Int       @id @default(autoincrement())
+  supabase_uid          String
+  email                 String
+  display_name          String?
+
+  memberships            Membership[]
+
+  @@map("users")
+}
+
+enum ACCOUNT_ACCESS {
+  READ_ONLY
+  READ_WRITE
+  ADMIN
+  OWNER
+}
+
+model Membership {
+  id                      Int         @id @default(autoincrement())
+  user_id                 Int
+  account_id              Int
+  account                 Account     @relation(fields: [account_id], references: [id])
+  user                    User        @relation(fields: [user_id], references: [id])
+  access                  ACCOUNT_ACCESS    @default(READ_ONLY)
+  pending                 Boolean     @default(false)
+
+  @@map("membership")
+  @@unique([user_id, account_id])
+}
+
+model Account {
+  id                      Int         @id @default(autoincrement())
+  name                    String
+  current_period_ends     DateTime    @default(now()) 
+  features                String[]
+  plan_id                 Int
+  plan                    Plan        @relation(fields: [plan_id], references: [id])
+  plan_name               String
+  members                 Membership[]
+  notes                   Note[]
+  max_notes               Int         @default(100)
+  stripe_subscription_id  String?
+  stripe_customer_id      String?
+  max_members             Int        @default(1)
+  join_password           String     @unique
+
+  @@map("account")
+}
+
+model Plan {
+  id                      Int        @id @default(autoincrement())
+  name                    String     @unique
+  features                String[]
+  accounts                Account[]
+  max_notes               Int         @default(100)
+  stripe_product_id       String?
+  max_members             Int        @default(1)
+
+  @@map("plan")
+}
+
+model Note {
+  id                      Int        @id @default(autoincrement())
+  account_id              Int?
+  account                 Account?     @relation(fields: [account_id], references: [id])
+
+  note_text               String
+
+  @@map("note")
+}
+
+model Setting {
+  id                      Int        @id @default(autoincrement())
+  name                    String
+  value                   String
+
+  @@map("setting")
+}
+
+model Recipe {
+  id                      Int        @id @default(autoincrement())
+  name                    String
+  value                   String
+  prep_time               Int 
+  cook_time               Int
+  servings                Int        @default(1)
+  intro                   String
+  description             String
+  rating                  Int
+  category_id             Int?
+  category                Category?  @relation(fields: [category_id], references: [id])
+  ingredients             RecipeIngredientRecipeRelationship[]
+  tags                    TagRecipeRelationship[]
+  meal                    Meal[]
+
+  @@map("recipe")
+}
+
+model RecipeIngredientRecipeRelationship {
+  recipeingredient_id     Int
+  recipeingredient        RecipeIngredient @relation(fields: [recipeingredient_id], references: [id])
+  recipe_id               Int
+  recipe                  Recipe           @relation(fields: [recipe_id], references: [id])
+
+  @@id([recipeingredient_id, recipe_id])
+}
+
+model Category {
+  id                      Int        @id @default(autoincrement())
+  name                    String
+  recipes                 Recipe[]
+
+  @@map("category")
+}
+
+model Ingredient {
+  id                      Int        @id @default(autoincrement())
+  name                    String
+  unit                    String
+  recipes                 IngredientRecipeIngredientRelationship[]
+  @@map("ingredient")
+}
+
+model RecipeIngredient {
+  id                      Int        @id @default(autoincrement())
+  amount                  Int
+  scaling                 Float
+  recipe                  RecipeIngredientRecipeRelationship[]
+  ingredient              IngredientRecipeIngredientRelationship[]
+
+  @@map("recipeingredient")
+}
+
+model IngredientRecipeIngredientRelationship {
+  ingredient_id         Int
+  ingredient            Ingredient @relation(fields: [ingredient_id], references: [id]) 
+  recipeingredient_id   Int
+  recipeingredient      RecipeIngredient @relation(fields: [recipeingredient_id], references: [id]) 
+
+  @@id([ingredient_id, recipeingredient_id])
+}
+
+model Meal {
+  id                      Int        @id @default(autoincrement())
+  day                     DateTime
+  name                    String 
+  servings                Int?
+  recipe_id               Int
+  recipe                  Recipe?    @relation(fields: [recipe_id], references: [id]) 
+
+  @@map("meal")
+}
+
+model Grocery {
+  id                      Int        @id @default(autoincrement())
+  date                    DateTime
+
+  @@map("grocery")
+}
+
+model Tag {
+  id                      Int        @id @default(autoincrement())
+  name                    String
+  recipe                  TagRecipeRelationship[]
+
+  @@map("tag")
+}
+
+model TagRecipeRelationship {
+  tag_id                  Int
+  tag                     Tag        @relation(fields: [tag_id], references: [id])
+  recipe_id               Int
+  recipe                  Recipe     @relation(fields: [recipe_id], references: [id])
+
+  @@id([tag_id, recipe_id])
+}
