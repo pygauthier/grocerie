@@ -10,12 +10,15 @@ import { notesRouter } from '~~/server/trpc/routers/notes.router';
 import { recipesRouter } from '~~/server/trpc/routers/recipes.router';
 import { authRouter } from '~~/server/trpc/routers/auth.router';
 import { accountRouter } from '~~/server/trpc/routers/account.router';
+import { categoryRouter } from '~~/server/trpc/routers/category.router';
 
+console.log(categoryRouter)
 export const appRouter = router({
   notes: notesRouter,
   recipes: recipesRouter,
   auth: authRouter,
   account: accountRouter,
+  category: categoryRouter,
 })
 
 // export only the type definition of the API

@@ -135,6 +135,7 @@ model RecipeIngredientRecipeRelationship {
 model Category {
   id                      Int        @id @default(autoincrement())
   name                    String
+  active                  Boolean @default(true)
   recipes                 Recipe[]
 
   @@map("category")
